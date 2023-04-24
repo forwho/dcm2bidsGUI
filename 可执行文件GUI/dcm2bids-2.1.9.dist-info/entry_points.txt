@@ -1,0 +1,5 @@
+[console_scripts]
+dcm2bids = dcm2bids.dcm2bids:main
+dcm2bids_helper = dcm2bids.helper:main
+dcm2bids_scaffold = dcm2bids:scaffold
+
