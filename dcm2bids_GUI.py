@@ -118,13 +118,14 @@ class MainWindow(QMainWindow):
         text1 = self.ui.comboBox_1.currentText()
         text2 = self.ui.comboBox_2.currentText()
         text3 = self.ui.comboBox_3.currentText()
+        text4 = self.ui.comboBox_4.toPlainText()
         # 如果文本为空
         if not text1:
             # 弹出提示窗口
             QMessageBox.information(self, '提示', '序列描述为空，请先扫描数据')
         else:
             # 拼接成一行文本
-            text = f"{text1}_{text2}_{text3}\n"
+            text = f"{text1}\t{text2}\t{text3}\t{text4}\n"
             self.ui.textBrowser.append(text)
 
 
@@ -142,12 +143,13 @@ class MainWindow(QMainWindow):
                     continue
                 # 去除序号和空格，只保留字段内容
                 line = re.sub(r'^\d+\.', '', line)
-                fields = line.split('_')
+                fields = line.split('\t')
                 dataType = fields[1]
                 modalityLabel = fields[2]
                 seriesDescription = fields[0]
+                customLabels=fields[3]
                 criteria = {"SeriesDescription": f"*{seriesDescription}*"}
-                entry = {"dataType": dataType, "modalityLabel": modalityLabel, "criteria": criteria}
+                entry = {"dataType": dataType, "modalityLabel": modalityLabel, "criteria": criteria, "customLabels":customLabels}
                 self.config["descriptions"].append(entry)
 
             filepath1 = os.path.join(directorytext_1,'dcm2bids_config.json')
@@ -423,7 +425,7 @@ class MyThread(QThread):
         excel_file = os.path.join(directorytext_1, '被试ID对应表.xlsx')
         workbook.save(excel_file)
         # 删除配置结构文件和临时文件
-        os.remove(configfile)
+        # os.remove(configfile)
         tmp_dcm2bids_path = os.path.join(directorytext_1, "tmp_dcm2bids")
         shutil.rmtree(tmp_dcm2bids_path)
         self.update_progress.emit(100)
