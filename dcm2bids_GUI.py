@@ -108,6 +108,7 @@ class MainWindow(QMainWindow):
             self.thread = scanThread()
             self.thread.update_description.connect(self.update_series_description)
             self.thread.update_scan.connect(self.update_scan_str)
+            self.thread.update_flag.connect(self.update_series_flag)
             self.thread.start()
 
 
@@ -118,14 +119,13 @@ class MainWindow(QMainWindow):
         text1 = self.ui.comboBox_1.currentText()
         text2 = self.ui.comboBox_2.currentText()
         text3 = self.ui.comboBox_3.currentText()
-        text4 = self.ui.comboBox_4.toPlainText()
         # 如果文本为空
         if not text1:
             # 弹出提示窗口
             QMessageBox.information(self, '提示', '序列描述为空，请先扫描数据')
         else:
             # 拼接成一行文本
-            text = f"{text1}\t{text2}\t{text3}\t{text4}\n"
+            text = f"{text1}\t{text2}\t{text3}\n"
             self.ui.textBrowser.append(text)
 
 
@@ -147,9 +147,12 @@ class MainWindow(QMainWindow):
                 dataType = fields[1]
                 modalityLabel = fields[2]
                 seriesDescription = fields[0]
-                customLabels=fields[3]
-                criteria = {"SeriesDescription": f"*{seriesDescription}*"}
-                entry = {"dataType": dataType, "modalityLabel": modalityLabel, "criteria": criteria, "customLabels":customLabels}
+                seriesKey = self.ui.comboBox_4.currentText()
+                if seriesKey == 'SeriesDescription':
+                    criteria = {"SeriesDescription": f"*{seriesDescription}*"}
+                elif seriesKey == 'PulseSequenceName':
+                    criteria = {"PulseSequenceName": f"*{seriesDescription}*"}
+                entry = {"dataType": dataType, "modalityLabel": modalityLabel, "criteria": criteria}
                 self.config["descriptions"].append(entry)
 
             filepath1 = os.path.join(directorytext_1,'dcm2bids_config.json')
@@ -204,6 +207,7 @@ class MainWindow(QMainWindow):
             for folder in folders:
                 if not excel_path:
                     command = 'dcm2bids -d %s -p %04d -s 01 -c %s -o %s' % (os.path.join(sourcefile, folder), subnum, configfile, directorytext_1)
+                    print(command)
                     os.system(command)
                     row1 = row1 + 1
                     worksheet.cell(row=row1, column=1).value = str(subnum).zfill(4)
@@ -231,6 +235,7 @@ class MainWindow(QMainWindow):
 
                     else:  # 没有一致的被试名
                         command = 'dcm2bids -d %s -p %04d -s 01 -c %s -o %s' % (os.path.join(sourcefile, folder), subnum, configfile, directorytext_1)
+                        print(command)
                         os.system(command)
                         row1 = row1 + 1
                         worksheet.cell(row=row1, column=1).value = str(subnum).zfill(4)
@@ -335,7 +340,6 @@ class MainWindow(QMainWindow):
         self.ui.comboBox_1.addItem(series_description)
         QCoreApplication.processEvents()
 
-
     @QtCore.pyqtSlot(int)
     def update_scan_str(self, rate):
         if rate == 1:
@@ -425,7 +429,7 @@ class MyThread(QThread):
         excel_file = os.path.join(directorytext_1, '被试ID对应表.xlsx')
         workbook.save(excel_file)
         # 删除配置结构文件和临时文件
-        # os.remove(configfile)
+        os.remove(configfile)
         tmp_dcm2bids_path = os.path.join(directorytext_1, "tmp_dcm2bids")
         shutil.rmtree(tmp_dcm2bids_path)
         self.update_progress.emit(100)
