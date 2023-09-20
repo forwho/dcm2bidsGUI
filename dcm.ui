@@ -487,20 +487,7 @@ border-radius: 3px;</string>
        </spacer>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="2,1,2">
-        <item>
-         <spacer name="horizontalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
+       <layout class="QHBoxLayout" name="horizontalLayout_12">
         <item>
          <widget class="QPushButton" name="pushButton">
           <property name="font">
@@ -533,6 +520,57 @@ border-radius: 3px;</string>
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLabel" name="label_8">
+            <property name="maximumSize">
+             <size>
+              <width>1677721</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>微软雅黑</family>
+              <pointsize>10</pointsize>
+              <kerning>true</kerning>
+             </font>
+            </property>
+            <property name="text">
+             <string>精确匹配：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox_5">
+            <property name="font">
+             <font>
+              <family>微软雅黑</family>
+              <pointsize>10</pointsize>
+              <kerning>true</kerning>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border: 1px solid #686868;
+        border-radius: 5px;
+        padding: 3px;
+        background-color: #FFFFFF;</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>是</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>否</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

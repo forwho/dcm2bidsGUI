@@ -149,9 +149,15 @@ class MainWindow(QMainWindow):
                 seriesDescription = fields[0]
                 seriesKey = self.ui.comboBox_4.currentText()
                 if seriesKey == 'SeriesDescription':
-                    criteria = {"SeriesDescription": f"*{seriesDescription}*"}
+                    if self.ui.comboBox_5.currentText() == "是":
+                        criteria = {"SeriesDescription": f"{seriesDescription}"}
+                    else:
+                        criteria = {"SeriesDescription": f"*{seriesDescription}*"}
                 elif seriesKey == 'PulseSequenceName':
-                    criteria = {"PulseSequenceName": f"*{seriesDescription}*"}
+                    if self.ui.comboBox_5.currentText() == "是":
+                        criteria = {"PulseSequenceName": f"{seriesDescription}"}
+                    else:
+                        criteria = {"PulseSequenceName": f"*{seriesDescription}*"}
                 entry = {"dataType": dataType, "modalityLabel": modalityLabel, "criteria": criteria}
                 self.config["descriptions"].append(entry)
 
