@@ -18,6 +18,7 @@ from dcm2bids.structure import Participant
 from dcm2bids.utils import (DEFAULT, load_json, save_json,
                             splitext_, run_shell_command, valid_path)
 from dcm2bids.version import __version__, check_latest, dcm2niix_version
+import shlex
 
 class MainWindow(QMainWindow):
     # 加载ui,设置点击事件
@@ -108,7 +109,7 @@ class MainWindow(QMainWindow):
             self.thread = scanThread()
             self.thread.update_description.connect(self.update_series_description)
             self.thread.update_scan.connect(self.update_scan_str)
-            self.thread.update_flag.connect(self.update_series_flag)
+            # self.thread.update_flag.connect(self.update_series_flag)
             self.thread.start()
 
 
@@ -505,6 +506,106 @@ def tem_run(dicom_dir, output_dir):
     return f"Example in: {out_folder}\n{rsl}"
 
 
+class Dcm2niix(object):
+    """ Object to handle dcm2niix execution
+
+    Args:
+        dicomDirs (list): A list of folder with dicoms to convert
+        bidsDir (str): A path to the root BIDS directory
+        participant: Optional Participant object
+        options (str): Optional arguments for dcm2niix
+
+    Properties:
+        sidecars (list): A list of sidecar path created by dcm2niix
+    """
+
+    def __init__(
+        self, dicomDirs, bidsDir, participant=None, options=DEFAULT.dcm2niixOptions
+    ):
+        self.logger = logging.getLogger(__name__)
+
+        self.sidecarsFiles = []
+
+        self.dicomDirs = dicomDirs
+        self.bidsDir = bidsDir
+        self.participant = participant
+        self.options = options
+
+    @property
+    def outputDir(self):
+        """
+        Returns:
+            A directory to save all the output files of dcm2niix
+        """
+        tmpDir = self.participant.prefix if self.participant else DEFAULT.helperDir
+
+        return self.bidsDir / DEFAULT.tmpDirName / tmpDir
+
+    def run(self, force=False):
+        """ Run dcm2niix if necessary
+
+        Args:
+            force (boolean): Forces a cleaning of a previous execution of
+                             dcm2niix
+
+        Sets:
+            sidecarsFiles (list): A list of sidecar path created by dcm2niix
+        """
+        try:
+            oldOutput = os.listdir(self.outputDir) != []
+        except:
+            oldOutput = False
+
+        if oldOutput and force:
+            self.logger.warning("Previous dcm2niix directory output found:")
+            self.logger.warning(self.outputDir)
+            self.logger.warning("'force' argument is set to True")
+            self.logger.warning("Cleaning the previous directory and running dcm2niix")
+
+            shutil.rmtree(self.outputDir, ignore_errors=True)
+
+            # os.makedirs(self.outputDir, exist_ok=True)
+            # python2 compatibility
+            if not os.path.exists(self.outputDir):
+                os.makedirs(self.outputDir)
+
+            self.execute()
+
+        elif oldOutput:
+            self.logger.warning("Previous dcm2niix directory output found:")
+            self.logger.warning(self.outputDir)
+            self.logger.warning("Use --forceDcm2niix to rerun dcm2niix")
+
+        else:
+            # os.makedirs(self.outputDir, exist_ok=True)
+            # python2 compatibility
+            if not os.path.exists(self.outputDir):
+                os.makedirs(self.outputDir)
+
+            self.execute()
+
+        self.sidecarFiles = glob(os.path.join(self.outputDir, "*.json"))
+
+    def execute(self):
+        """ Execute dcm2niix for each directory in dicomDirs
+        """
+        for dicomDir in self.dicomDirs:
+            cmd = ['dcm2niix', *shlex.split(self.options),
+                   '-o', self.outputDir, dicomDir]
+            try:
+                output = run_shell_command(cmd)
+            except:
+                output = "Failed to convert %s to Nift file" % dicomDir
+
+            try:
+                output = output.decode()
+            except:
+                pass
+
+            self.logger.debug("\n%s" % output)
+            self.logger.info("Check log file for dcm2niix output")
+
+
 class Dcm2bids(object):
     def __init__(
         self,
@@ -574,7 +675,6 @@ class Dcm2bids(object):
 
         check_latest()
         check_latest("dcm2niix")
-
         dcm2niix.run(self.forceDcm2niix)
 
         sidecars = []
